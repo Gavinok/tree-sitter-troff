@@ -86,24 +86,3 @@ hello world
      (macro_call (request_char) (identifier))
      (end_block)))
   (macro_call (request_char) (identifier)))
-
-==================
-Registers
-==================
-.	de M2
-hello world
-.  br
-..
-
-. M2
----
-
-(source_file
-  (macro_definition
-   (request_char)
-   (identifier)
-   (macro_body
-     (text)
-     (macro_call (request_char) (identifier))
-     (end_block)))
-  (macro_call (request_char) (identifier)))
