@@ -1,0 +1,109 @@
+==================
+Macro Definitions
+==================
+.de m2
+testing
+..
+
+---
+
+(source_file
+  (macro_definition
+    (request_char)
+    (identifier)
+    (macro_body (text)
+      (end_block))))
+
+==================
+Macro Call
+==================
+.m2
+---
+
+(source_file
+  (macro_call
+    (request_char)
+    (identifier)))
+
+==================
+Basic Text
+==================
+Hello world what is up?
+---
+
+(source_file
+  (text))
+
+==================
+Multiple Lines Of Text
+==================
+Hello world what is up?
+ What could go wrong?
+---
+
+(source_file
+  (text)
+  (text))
+
+==================
+Lines Def And Call
+==================
+.de M2
+hello world
+.br
+..
+
+.M2
+---
+
+(source_file
+  (macro_definition
+   (request_char)
+   (identifier)
+   (macro_body
+     (text)
+     (macro_call (request_char) (identifier))
+     (end_block)))
+  (macro_call (request_char) (identifier)))
+  
+==================
+Indented Calls
+==================
+.	de M2
+hello world
+.  br
+..
+
+. M2
+---
+
+(source_file
+  (macro_definition
+   (request_char)
+   (identifier)
+   (macro_body
+     (text)
+     (macro_call (request_char) (identifier))
+     (end_block)))
+  (macro_call (request_char) (identifier)))
+
+==================
+Registers
+==================
+.	de M2
+hello world
+.  br
+..
+
+. M2
+---
+
+(source_file
+  (macro_definition
+   (request_char)
+   (identifier)
+   (macro_body
+     (text)
+     (macro_call (request_char) (identifier))
+     (end_block)))
+  (macro_call (request_char) (identifier)))
