@@ -5,25 +5,61 @@ module.exports = grammar({
   rules: {
     // TODO: add the actual grammar rules
     source_file: ($) =>
-      repeat(choice($.macro_definition, $.macro_call, $.text, "\n")),
+      repeat(
+        choice($.macro_definition, $.macro_call, $.text, $.escape_seq, "\n")
+      ),
 
-    text: ($) => /([a-z]|[A-Z]|\d|\?| )+/,
+    text: ($) => /([a-z]|[A-Z]|\d|\?| |\')+/,
 
     request_char: ($) => seq(choice(".", "'"), repeat(choice(" ", "\t"))),
 
     identifier: ($) => /([a-z]|[A-Z]|\d)+/,
-
+    line_continuation: ($) => /\\\n/,
     macro_definition: ($) =>
       seq($.request_char, "de", "", $.identifier, $.macro_body),
+    copy_mode_escape: ($) =>
+      seq("\\\\", choice(seq("$", /[0-9]/), $.escape_seq)),
+    interned_escape: ($) => $.escape_seq,
     macro_body: ($) =>
-      seq("\n", repeat(seq(choice($.macro_call, $.text), "\n")), $.end_block),
+      seq(
+        "\n",
+        repeat(
+          choice($.copy_mode_escape, $.interned_escape, $.macro_call, $.text)
+        ),
+        $.end_block
+      ),
     end_block: ($) => "..",
 
-    macro_call: ($) => seq($.request_char, $.identifier),
-    macro_arg: ($) => seq(" ", $.identifier),
-    macro_args: ($) => repeat1($.macro_arg),
-    escape_seq: ($) =>
+    macro_call: ($) =>
+      seq($.request_char, $.identifier, optional($.macro_args)),
+    macro_args: ($) => repeat1(seq(" ", $.macro_arg)),
+
+    macro_arg: ($) => choice($.identifier, $.quoted_arg),
+
+    embedded_quote: ($) => '""', //embedded_quote
+    quote_start: ($) => '"', // quoted_arg_start
+    quote_end: ($) => '"', // quoted_arg_end
+    quoted_arg: ($) =>
+      seq(
+        $.quote_start,
+        repeat1(choice($.embedded_quote, $.text, $.line_continuation)),
+        $.quote_end
+      ),
+
+    set_font: ($) =>
+      seq(
+        "f",
+        choice(
+          /([a-z]|[A-Z]|[0-9])/,
+          seq("(", /([a-z]|[A-Z]|[0-9])/, /([a-z]|[A-Z]|[0-9])/)
+        )
+      ),
+    set_font_size: ($) =>
+      seq("s", optional(choice("+", "-")), choice(/[0-9]+/)),
+    comment: ($) => '"',
+    escape_type: ($) =>
       choice(
+        $.comment,
         seq("(", $.identifier),
         seq("*", $.identifier), // TODO make only work for one char
         seq("(*", $.identifier), // TODO make only work for two char
@@ -33,6 +69,10 @@ module.exports = grammar({
         "c",
         // TODO seq("C", "'", "'")
         "d",
+        "\n",
+        $.set_font,
+        $.set_font_size,
+        /([a-z]|[A-Z])/,
         // TODO drawing with "D"
         // TODO f for fonts
         // TODO g for format of number register
@@ -71,8 +111,8 @@ module.exports = grammar({
         "^",
         "&",
         "!",
-        '"',
         "%"
       ),
+    escape_seq: ($) => seq("\\", $.escape_type),
   },
 });
